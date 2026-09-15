@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DigiCommerce V2</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#17202a}
+header{background:#087f3e;color:#fff;padding:16px;font-size:21px;font-weight:700;position:sticky;top:0;z-index:5}
+nav{display:flex;gap:7px;padding:9px;background:#fff;overflow:auto;position:sticky;top:56px;z-index:4}
+button{border:0;border-radius:8px;padding:10px 13px;background:#087f3e;color:#fff;font-weight:700;cursor:pointer}
+button.secondary{background:#e8eef0;color:#17202a}.danger{background:#b42318}
+main{padding:15px;max-width:1000px;margin:auto}.section{display:none}.section.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:#fff;border-radius:12px;padding:15px;box-shadow:0 2px 8px #0001;margin-bottom:12px}
+.big{font-size:23px;font-weight:700;margin-top:7px}.muted{color:#667085;font-size:13px}
+input,select{padding:11px;border:1px solid #ccd4d8;border-radius:8px;width:100%;margin:5px 0 10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+table{width:100%;background:#fff;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
+.tablewrap{overflow:auto}.alert{background:#fff4d6;padding:12px;border-radius:10px;margin:10px 0}
+.success{background:#e8f7ee;padding:12px;border-radius:10px}.actions{display:flex;gap:7px;flex-wrap:wrap}
+@media(max-width:600px){.row{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}th,td{font-size:12px}}
+</style>
+</head>
+<body>
+<header>🛍️ DigiCommerce V2</header>
+<nav>
+<button onclick="show('dash')">Accueil</button><button onclick="show('products')">Produits</button>
+<button onclick="show('sale')">Vente</button><button onclick="show('clients')">Clients</button>
+<button onclick="show('expenses')">Dépenses</button><button onclick="show('reports')">Rapports</button>
+</nav>
+<main>
+<section id="dash" class="section active">
+<h2>Tableau de bord</h2>
+<div class="cards">
+<div class="card">Chiffre d'affaires<div class="big" id="ca">0 FCFA</div></div>
+<div class="card">Bénéfice net<div class="big" id="profit">0 FCFA</div></div>
+<div class="card">Ventes<div class="big" id="salesCount">0</div></div>
+<div class="card">Produits<div class="big" id="productCount">0</div></div>
+</div><div id="lowStock"></div>
+<div class="card"><b>Dernières ventes</b><div id="dashSales"></div></div>
+</section>
+
+<section id="products" class="section"><h2>Produits</h2>
+<div class="card"><div class="row">
+<input id="pname" placeholder="Nom du produit"><input id="qty" type="number" min="0" placeholder="Stock initial">
+</div><div class="row">
+<input id="buy" type="number" min="0" placeholder="Prix d'achat (FCFA)">
+<input id="sell" type="number" min="0" placeholder="Prix de vente (FCFA)">
+</div><button onclick="addProduct()">Ajouter le produit</button></div>
+<div class="tablewrap"><table><thead><tr><th>Produit</th><th>Stock</th><th>Vente</th><th>Achat</th><th>Action</th></tr></thead><tbody id="plist"></tbody></table></div>
+</section>
+
+<section id="sale" class="section"><h2>Nouvelle vente</h2>
+<div class="card"><select id="productSelect"></select><input id="saleQty" type="number" min="1" value="1" placeholder="Quantité">
+<select id="clientSelect"></select><button onclick="makeSale()">Enregistrer la vente</button></div>
+<div class="card"><b>Dernières ventes</b><div id="salesList"></div></div>
+</section>
+
+<section id="clients" class="section"><h2>Clients</h2>
+<div class="card"><div class="row"><input id="cname" placeholder="Nom du client"><input id="cphone" placeholder="Téléphone"></div>
+<button onclick="addClient()">Ajouter le client</button></div>
+<div class="tablewrap"><table><thead><tr><th>Nom</th><th>Téléphone</th><th>Action</th></tr></thead><tbody id="clist"></tbody></table></div>
+</section>
+
+<section id="expenses" class="section"><h2>Dépenses</h2>
+<div class="card"><div class="row"><input id="ename" placeholder="Libellé (transport, loyer...)"><input id="eamount" type="number" min="0" placeholder="Montant (FCFA)"></div>
+<button onclick="addExpense()">Ajouter la dépense</button></div>
+<div class="card"><b>Total des dépenses : <span id="expenseTotal">0 FCFA</span></b></div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Libellé</th><th>Montant</th><th>Action</th></tr></thead><tbody id="elist"></tbody></table></div>
+</section>
+
+<section id="reports" class="section"><h2>Rapports</h2>
+<div class="cards">
+<div class="card">CA total<div class="big" id="rCA">0 FCFA</div></div>
+<div class="card">Bénéfice avant dépenses<div class="big" id="rGross">0 FCFA</div></div>
+<div class="card">Dépenses<div class="big" id="rExpenses">0 FCFA</div></div>
+<div class="card">Bénéfice net<div class="big" id="rProfit">0 FCFA</div></div>
+</div>
+<div class="card"><b>Transactions : <span id="rCount">0</span></b><br><span class="muted">Les données sont actuellement conservées sur cet appareil.</span></div>
+<div class="card actions"><button onclick="exportData()">Exporter les données</button><button class="secondary" onclick="resetData()">Réinitialiser les données</button></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const money=n=>Number(n||0).toLocaleString('fr-FR')+' FCFA';
+function load(k){try{let x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(e){return[]}}
+let products=load('dc2_products'),sales=load('dc2_sales'),clients=load('dc2_clients'),expenses=load('dc2_expenses');
+
+function esc(v){return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
+function save(){localStorage.setItem('dc2_products',JSON.stringify(products));localStorage.setItem('dc2_sales',JSON.stringify(sales));localStorage.setItem('dc2_clients',JSON.stringify(clients));localStorage.setItem('dc2_expenses',JSON.stringify(expenses));render()}
+function show(id){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');render()}
+
+function addProduct(){
+ let name=$('pname').value.trim(),q=Number($('qty').value),b=Number($('buy').value),s=Number($('sell').value);
+ if(!name||!Number.isFinite(q)||q<0||!Number.isFinite(b)||b<0||!Number.isFinite(s)||s<0)return alert('Remplis correctement les champs.');
+ products.push({id:Date.now(),name,qty:q,buy:b,sell:s});save();
+ $('pname').value=$('qty').value=$('buy').value=$('sell').value='';
+}
+function delProduct(id){if(confirm('Supprimer ce produit ?')){products=products.filter(p=>p.id!==id);save()}}
+function addClient(){
+ let name=$('cname').value.trim(),phone=$('cphone').value.trim();
+ if(!name)return alert('Indique le nom du client.');
+ clients.push({id:Date.now(),name,phone});save();$('cname').value=$('cphone').value='';
+}
+function delClient(id){if(confirm('Supprimer ce client ?')){clients=clients.filter(c=>c.id!==id);save()}}
+function makeSale(){
+ let id=Number($('productSelect').value),q=Number($('saleQty').value),p=products.find(x=>x.id===id),cid=Number($('clientSelect').value)||null,c=clients.find(x=>x.id===cid);
+ if(!p||!Number.isInteger(q)||q<1)return alert('Choisis un produit et une quantité valide.');
+ if(p.qty<q)return alert('Stock insuffisant.');
+ p.qty-=q;
+ sales.unshift({id:Date.now(),date:new Date().toLocaleString('fr-FR'),name:p.name,qty:q,total:q*p.sell,profit:q*(p.sell-p.buy),client:c?c.name:'Client comptant'});
+ save();alert('Vente enregistrée.');
+}
+function addExpense(){
+ let name=$('ename').value.trim(),amount=Number($('eamount').value);
+ if(!name||!Number.isFinite(amount)||amount<=0)return alert('Remplis correctement la dépense.');
+ expenses.unshift({id:Date.now(),date:new Date().toLocaleString('fr-FR'),name,amount});save();
+ $('ename').value=$('eamount').value='';
+}
+function delExpense(id){expenses=expenses.filter(e=>e.id!==id);save()}
+function exportData(){
+ let data={exportedAt:new Date().toISOString(),products,sales,clients,expenses};
+ let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);a.download='DigiCommerce-sauvegarde.json';a.click();URL.revokeObjectURL(a.href);
+}
+function resetData(){if(confirm('Cette action efface les données de DigiCommerce sur cet appareil. Continuer ?')){products=[];sales=[];clients=[];expenses=[];save()}}
+function render(){
+ let ca=sales.reduce((a,s)=>a+s.total,0),gross=sales.reduce((a,s)=>a+s.profit,0),ex=expenses.reduce((a,e)=>a+e.amount,0);
+ $('ca').textContent=money(ca);$('profit').textContent=money(gross-ex);$('salesCount').textContent=sales.length;$('productCount').textContent=products.length;
+ $('rCA').textContent=money(ca);$('rGross').textContent=money(gross);$('rExpenses').textContent=money(ex);$('rProfit').textContent=money(gross-ex);$('rCount').textContent=sales.length;$('expenseTotal').textContent=money(ex);
+ $('plist').innerHTML=products.map(p=>`<tr><td>${esc(p.name)}</td><td>${p.qty}</td><td>${money(p.sell)}</td><td>${money(p.buy)}</td><td><button class="danger" onclick="delProduct(${p.id})">Suppr.</button></td></tr>`).join('');
+ $('productSelect').innerHTML=products.length?products.map(p=>`<option value="${p.id}">${esc(p.name)} — stock ${p.qty}</option>`).join(''):'<option value="">Aucun produit</option>';
+ $('clientSelect').innerHTML='<option value="">Client comptant</option>'+clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+ $('clist').innerHTML=clients.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td><button class="danger" onclick="delClient(${c.id})">Suppr.</button></td></tr>`).join('');
+ $('elist').innerHTML=expenses.map(e=>`<tr><td>${esc(e.date)}</td><td>${esc(e.name)}</td><td>${money(e.amount)}</td><td><button class="danger" onclick="delExpense(${e.id})">Suppr.</button></td></tr>`).join('');
+ $('salesList').innerHTML=sales.slice(0,10).map(s=>`<p>${esc(s.date)} — ${esc(s.name)} × ${s.qty} — ${esc(s.client)} : <b>${money(s.total)}</b></p>`).join('')||'<p>Aucune vente.</p>';
+ $('dashSales').innerHTML=sales.slice(0,5).map(s=>`<p>${esc(s.name)} × ${s.qty} : <b>${money(s.total)}</b></p>`).join('')||'<p>Aucune vente.</p>';
+ let low=products.filter(p=>p.qty<=5);
+ $('lowStock').innerHTML=low.length?`<div class="alert">⚠️ ${low.length} produit(s) ont un stock faible : ${low.map(p=>esc(p.name)+' ('+p.qty+')').join(', ')}</div>`:'';
+}
+render();
+</script>
+</body>
+</html>
